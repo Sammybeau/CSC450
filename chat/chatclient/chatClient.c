@@ -26,20 +26,27 @@ int main(int argc, char** argv)
         puts("We are Connected");
         //Receive a reply from the server
         
-        char* server_reply = malloc(2000 * sizeof(char));
+        char* client_reply = malloc(2000 * sizeof(char));
         while(1)
         {
-            error = recv(sockfd, server_reply, sizeof(server_reply), 0);
+            error = recv(sockfd, client_reply,  (sizeof(client_reply)), 0);
             if(error < 0)
             {
                 puts("recv failed");
+                break;
             }
             else
             {
                 puts("Reply received\n");
-                puts(server_reply);
+                puts(client_reply);
+                //char* msg = server_reply;
+                char* msg = "client 1 is here";
+                send(sockfd , msg , strlen(msg) , 0);
+                break;
+               
             }
         }
+        
     }
     free(server);
     return 0;
