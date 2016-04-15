@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#define SHMSZ 9
+
 
 void broadcast(char* msg, int* clients, int numClients);
 
@@ -37,12 +41,30 @@ int main(int argc, char** argv)
     }
     int listenfd;
     int clientfd;
-    int error; 
-    int MAX_CLIENTS = 5;
+    int MAX_CLIENTS = 1000;
     int* clients = malloc(MAX_CLIENTS * sizeof(int));
     int numberOfConnectedClients = 0;
-    while(1)
-    {
+    
+    
+    int shmid;
+    key_t key;
+    //char *shm, *s;
+
+    key = 5678;
+
+    if ((shmid = shmget(key, SHMSZ, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        return -1;
+    }
+
+    if ((clients = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        return -1;
+    }
+    
+    
+    
+    char* message = "hello";
     while(1)
     {
         listenfd = listen(sockfd, 100);
@@ -50,36 +72,13 @@ int main(int argc, char** argv)
         printf("Listening....\n");
         clientfd = accept(sockfd ,  (struct sockaddr *)server , &serverSize);
         printf("Client Connected.... %d\n", clientfd);
-        //add this client to our array of clients
-        clients[numberOfConnectedClients++] =  clientfd;
-        char* message = "hello";
-        broadcast(message, clients, numberOfConnectedClients);
-       
-         break;
-       
-    }
-    char* client_reply = malloc(2000 * sizeof(char));
-    int errorc;
-     while(1)
-        {
-           
-            errorc = recv(clientfd, client_reply, (2 *(sizeof(client_reply))), 0);
-            if(errorc < 0)
-            {
-                puts("recv failed");
-                puts(client_reply);
-            }
-            else
-            {
-                puts("Reply received\n");
-                puts(client_reply);
-               
-            }
-            break;
-        }
-        //playing with multiple clients here with the while loop. will have to create something to handle each client individually
+        int pit = fork();
         
-        break;
+        //add this client to our array of clients
+        clients[numberOfConnectedClients++] = clientfd;
+        
+        //send(clientfd, message , strlen(message) , 0);
+        broadcast(message, clients, numberOfConnectedClients);
     }
     //write(clientfd, buffer, sizeof(buffer));
 }
@@ -89,8 +88,10 @@ void broadcast(char* msg, int* clients, int numClients)
     int i;
     for(i = 0; i < numClients; i++)
     {
-        send(*(clients + (i * sizeof(int))) , msg , strlen(msg) , 0);
-        printf("Sending to client: %d\n", clients + (i * sizeof(int)));
+        printf("Trying to send to client with FD: %d\n", clients[i]);
+        //printf("Trying to send to client with FD: %d\n", *(clients + (i * sizeof(int))));
         
+        send(clients[i] , msg , strlen(msg) , 0);
+        puts("sent");
     }
 }

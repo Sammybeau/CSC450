@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
 
 int main(int argc, char** argv)
 {
@@ -26,27 +28,23 @@ int main(int argc, char** argv)
         puts("We are Connected");
         //Receive a reply from the server
         
-        char* client_reply = malloc(2000 * sizeof(char));
+        char* server_reply = malloc(2000 * sizeof(char));
         while(1)
         {
-            error = recv(sockfd, client_reply,  (sizeof(client_reply)), 0);
+            error = recv(sockfd, server_reply, sizeof(server_reply), 0);
             if(error < 0)
             {
                 puts("recv failed");
-                break;
             }
             else
             {
                 puts("Reply received\n");
-                puts(client_reply);
-                //char* msg = server_reply;
-                char* msg = "client 1 is here";
-                send(sockfd , msg , strlen(msg) , 0);
-                break;
-               
+                puts(server_reply);
+                
+                char* message = "yo\tyo";
+                send(sockfd, message , strlen(message) , 0);
             }
         }
-        
     }
     free(server);
     return 0;
