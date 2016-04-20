@@ -27,11 +27,11 @@ int main(int argc, char** argv)
     {
         puts("We are Connected");
         //Receive a reply from the server
-        
-        char* server_reply = malloc(2000 * sizeof(char));
+        int MAX_SIZE = 2000 * sizeof(char);
+        char* server_reply = malloc(MAX_SIZE);
         while(1)
         {
-            error = recv(sockfd, server_reply, sizeof(server_reply), 0);
+            error = recv(sockfd, server_reply, MAX_SIZE, 0);
             if(error < 0)
             {
                 puts("recv failed");
